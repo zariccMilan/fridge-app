@@ -52,11 +52,11 @@ public class FridgeItem {
     @Column(name = "is_deleted", nullable = false)
     private boolean isDeleted = false;
 
-    @ManyToOne(optional = false)
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id", nullable = false)
     private Category category;
 
-    @ManyToOne(optional = false)
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(name = "location_id", nullable = false)
     private ItemLocation itemLocation;
 }
