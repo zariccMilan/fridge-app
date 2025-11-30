@@ -35,3 +35,12 @@ build/
 ### MacOS ###
 .DS_Store
 
+### Spring Boot ###
+application.properties
+application-*.properties
+/src/main/resources/application.properties
+!application-example.properties
+
+### Environment files ###
+.env
+.env.local
