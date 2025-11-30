@@ -28,7 +28,7 @@ public class Category {
 
     @NotBlank
     @Size(max = 100)
-    @Column(name = "name", nullable = false, length = 50)
+    @Column(name = "name", nullable = false, length = 100)
     private String name;
 
     @OneToMany(mappedBy = "category", fetch = FetchType.LAZY) // default is LAZY but for clarification
