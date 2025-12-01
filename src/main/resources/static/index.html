@@ -49,7 +49,6 @@
         </tr>
         </thead>
         <tbody>
-        <!-- locations go here -->
         </tbody>
     </table>
 </div>
@@ -60,17 +59,19 @@
     <table id="itemsTable">
         <thead>
         <tr>
+            <th>ID</th>
             <th>Name</th>
             <th>Quantity</th>
             <th>Best before</th>
             <th>Category</th>
             <th>Location</th>
+            <th>Actions</th>
         </tr>
         </thead>
         <tbody>
-        <!-- items go here -->
         </tbody>
     </table>
+
 </div>
 
 <div class="section">
@@ -110,6 +111,29 @@
     </form>
     <div id="message"></div>
     <div id="error"></div>
+    <h3>Update fridge item (quantity / bestBefore)</h3>
+    <p>Enter existing item ID from table and new values (leave empty to skip field).</p>
+    <form id="updateForm">
+        <div class="row">
+            <div>
+                <label>Item ID:<br>
+                    <input type="text" id="updateId" placeholder="Item UUID" required>
+                </label>
+            </div>
+            <div>
+                <label>New quantity:<br>
+                    <input type="number" id="updateQuantity" min="0">
+                </label>
+            </div>
+            <div>
+                <label>New bestBefore (date):<br>
+                    <input type="date" id="updateBestBefore">
+                </label>
+            </div>
+        </div>
+        <button type="submit">Update</button>
+    </form>
+
 </div>
 
 <script>
@@ -129,6 +153,8 @@
     const form = document.getElementById('createForm');
     const messageDiv = document.getElementById('message');
     const errorDiv = document.getElementById('error');
+    const updateForm = document.getElementById('updateForm');
+
 
     function clearMessages() {
         messageDiv.textContent = '';
@@ -222,6 +248,9 @@
         items.forEach(item => {
             const tr = document.createElement('tr');
 
+            const idTd = document.createElement('td');
+            idTd.textContent = item.id;
+
             const nameTd = document.createElement('td');
             nameTd.textContent = item.name;
 
@@ -237,14 +266,68 @@
             const locationTd = document.createElement('td');
             locationTd.textContent = item.locationName || item.locationId;
 
+            const actionsTd = document.createElement('td');
+            const deleteBtn = document.createElement('button');
+            deleteBtn.textContent = 'Delete';
+            deleteBtn.onclick = () => deleteItem(item.id);
+            actionsTd.appendChild(deleteBtn);
+
+            tr.appendChild(idTd);
             tr.appendChild(nameTd);
             tr.appendChild(quantityTd);
             tr.appendChild(bestBeforeTd);
             tr.appendChild(categoryTd);
             tr.appendChild(locationTd);
+            tr.appendChild(actionsTd);
 
             itemsTableBody.appendChild(tr);
         });
+    }
+    async function updateItem(event) {
+        event.preventDefault();
+        clearMessages();
+
+        const id = document.getElementById('updateId').value.trim();
+        const quantityStr = document.getElementById('updateQuantity').value;
+        const bestBefore = document.getElementById('updateBestBefore').value;
+
+        if (!id) {
+            errorDiv.textContent = 'Item ID is required.';
+            return;
+        }
+
+        const body = {};
+        if (quantityStr !== '') {
+            body.quantity = Number(quantityStr);
+        }
+        if (bestBefore) {
+            body.bestBefore = bestBefore;
+        }
+
+        if (Object.keys(body).length === 0) {
+            errorDiv.textContent = 'Nothing to update.';
+            return;
+        }
+
+        try {
+            const res = await fetch(`${ITEMS_API}/${id}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            });
+
+            if (!res.ok) {
+                const text = await res.text();
+                throw new Error('Failed to update item: ' + text);
+            }
+
+            messageDiv.textContent = 'Item updated.';
+            updateForm.reset();
+            await loadItems();
+        } catch (e) {
+            console.error(e);
+            errorDiv.textContent = 'Error updating item.';
+        }
     }
 
 
@@ -293,12 +376,35 @@
         }
     }
 
+    async function deleteItem(id) {
+        clearMessages();
+        if (!confirm('Delete item?')) {
+            return;
+        }
+        try {
+            const res = await fetch(`${ITEMS_API}/${id}`, {
+                method: 'DELETE'
+            });
+            if (!res.ok && res.status !== 204) {
+                throw new Error('Failed to delete, status ' + res.status);
+            }
+            messageDiv.textContent = 'Item deleted.';
+            await loadItems();
+        } catch (e) {
+            console.error(e);
+            errorDiv.textContent = 'Error deleting item.';
+        }
+    }
+
+
 
 
     refreshCategoriesBtn.addEventListener('click', loadCategories);
     refreshLocationsBtn.addEventListener('click', loadLocations);
     refreshItemsBtn.addEventListener('click', loadItems);
     form.addEventListener('submit', createItem);
+    updateForm.addEventListener('submit', updateItem);
+
 
 
 
