@@ -54,7 +54,7 @@ public class FridgeItemService {
         FridgeItem fridgeItem = FridgeItem.builder()
                 .name(fridgeItemCreateDTO.getName())
                 .quantity(fridgeItemCreateDTO.getQuantity())
-                .storedAt(fridgeItemCreateDTO.getStoredAt())
+                .storedAt(LocalDateTime.now())
                 .bestBefore(fridgeItemCreateDTO.getBestBefore())
                 .category(category)
                 .itemLocation(itemLocation)
