@@ -1,0 +1,13 @@
+version: "3.8"
+services:
+  postgres:
+    image: postgres:17
+    container_name: fridge-postgres
+    environment:
+      POSTGRES_USER: fridge
+      POSTGRES_PASSWORD: Passwordforfridge25!!
+      POSTGRES_DB: fridge_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
