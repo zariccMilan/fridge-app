@@ -40,6 +40,7 @@ public class ItemLocationService {
         ItemLocation itemLocation = ItemLocation.builder()
                 .name(itemLocationCreateDTO.getName())
                 .build();
+        itemLocation = itemLocationRepository.save(itemLocation);
         return ItemLocationMapper.MAPPER.mapToItemLocationDTO(itemLocation);
     }
 
