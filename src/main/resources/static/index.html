@@ -2,84 +2,130 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Fridge Items</title>
+    <title>Fridge App</title>
     <style>
         body { font-family: Arial, sans-serif; margin: 20px; }
-        h1 { margin-bottom: 10px; }
+        h1, h2 { margin-bottom: 10px; }
         table { border-collapse: collapse; width: 100%; margin-top: 10px; }
         th, td { border: 1px solid #ccc; padding: 6px 10px; text-align: left; }
-        form { margin-top: 20px; display: flex; flex-wrap: wrap; gap: 10px; }
-        form input { padding: 4px 6px; }
+        .section { margin-bottom: 30px; }
+        button { padding: 4px 8px; margin-top: 5px; }
+        form { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 10px; }
+        form input { padding: 4px 6px; width: 100%; box-sizing: border-box; }
         .row { display: flex; gap: 10px; width: 100%; }
-        .row > div { flex: 1; }
+        .row > div { flex: 1; min-width: 150px; }
         #message { margin-top: 10px; color: green; }
         #error { margin-top: 10px; color: red; }
     </style>
 </head>
 <body>
 
-<h1>Fridge items</h1>
+<h1>Fridge app</h1>
 
-<button id="refreshBtn">Refresh</button>
+<div class="section">
+    <h2>Categories</h2>
+    <button id="refreshCategoriesBtn">Refresh categories</button>
+    <table id="categoriesTable">
+        <thead>
+        <tr>
+            <th>ID (UUID)</th>
+            <th>Name</th>
+        </tr>
+        </thead>
+        <tbody>
+        <!-- categories go here -->
+        </tbody>
+    </table>
+</div>
 
-<table id="itemsTable">
-    <thead>
-    <tr>
-        <th>Name</th>
-        <th>Quantity</th>
-        <th>Best before</th>
-        <th>Category</th>
-        <th>Location</th>
-    </tr>
-    </thead>
-    <tbody>
+<div class="section">
+    <h2>Locations</h2>
+    <button id="refreshLocationsBtn">Refresh locations</button>
+    <table id="locationsTable">
+        <thead>
+        <tr>
+            <th>ID (UUID)</th>
+            <th>Name</th>
+        </tr>
+        </thead>
+        <tbody>
+        <!-- locations go here -->
+        </tbody>
+    </table>
+</div>
 
-    </tbody>
-</table>
+<div class="section">
+    <h2>Fridge items</h2>
+    <button id="refreshItemsBtn">Refresh items</button>
+    <table id="itemsTable">
+        <thead>
+        <tr>
+            <th>Name</th>
+            <th>Quantity</th>
+            <th>Best before</th>
+            <th>Category</th>
+            <th>Location</th>
+        </tr>
+        </thead>
+        <tbody>
+        <!-- items go here -->
+        </tbody>
+    </table>
+</div>
 
-<h2>Add new item</h2>
-
-<form id="createForm">
-    <div class="row">
-        <div>
-            <label>Name:<br>
-                <input type="text" id="name" required>
-            </label>
+<div class="section">
+    <h2>Add new fridge item</h2>
+    <p>Use Category ID and Location ID from tables above (copy/paste UUID).</p>
+    <form id="createForm">
+        <div class="row">
+            <div>
+                <label>Name:<br>
+                    <input type="text" id="name" required>
+                </label>
+            </div>
+            <div>
+                <label>Quantity:<br>
+                    <input type="number" id="quantity" min="0" value="1" required>
+                </label>
+            </div>
+            <div>
+                <label>Best before (date):<br>
+                    <input type="date" id="bestBefore" required>
+                </label>
+            </div>
         </div>
-        <div>
-            <label>Quantity:<br>
-                <input type="number" id="quantity" min="0" required>
-            </label>
+        <div class="row">
+            <div>
+                <label>Category ID:<br>
+                    <input type="text" id="categoryId" placeholder="UUID from Categories table" required>
+                </label>
+            </div>
+            <div>
+                <label>Location ID:<br>
+                    <input type="text" id="locationId" placeholder="UUID from Locations table" required>
+                </label>
+            </div>
         </div>
-        <div>
-            <label>Best before (date):<br>
-                <input type="date" id="bestBefore" required>
-            </label>
-        </div>
-    </div>
-    <div class="row">
-        <div>
-            <label>Category ID:<br>
-                <input type="text" id="categoryId" required>
-            </label>
-        </div>
-        <div>
-            <label>Location ID:<br>
-                <input type="text" id="locationId" required>
-            </label>
-        </div>
-    </div>
-    <button type="submit">Create</button>
-</form>
-
-<div id="message"></div>
-<div id="error"></div>
+        <button type="submit">Create</button>
+    </form>
+    <div id="message"></div>
+    <div id="error"></div>
+</div>
 
 <script>
-    const API_BASE = '/api/fridge/fridge-items';
 
-    const tableBody = document.querySelector('#itemsTable tbody');
-    const refreshBtn = document.getElementById('refreshBtn');
+    const ITEMS_API = '/api/fridge/fridge-items';
+    const CATEGORIES_API = '/api/fridge/categories';
+    const ITEM_LOCATIONS_API = '/api/fridge/item-locations';
+
+    const categoriesTableBody = document.querySelector('#categoriesTable tbody');
+    const locationsTableBody = document.querySelector('#locationsTable tbody');
+    const itemsTableBody = document.querySelector('#itemsTable tbody');
+
+    const refreshCategoriesBtn = document.getElementById('refreshCategoriesBtn');
+    const refreshLocationsBtn = document.getElementById('refreshLocationsBtn');
+    const refreshItemsBtn = document.getElementById('refreshItemsBtn');
+
     const form = document.getElementById('createForm');
     const messageDiv = document.getElementById('message');
     const errorDiv = document.getElementById('error');
@@ -89,23 +135,90 @@
         errorDiv.textContent = '';
     }
 
-    async function loadItems() {
-        clearMessages();
+    // CATEGORIES
+
+    async function loadCategories() {
         try {
-            const res = await fetch(API_BASE);
+            const res = await fetch(CATEGORIES_API);
+            if (!res.ok) {
+                throw new Error('Failed to load categories, status ' + res.status);
+            }
+            const data = await res.json();
+            renderCategories(data);
+        } catch (e) {
+            console.error(e);
+            errorDiv.textContent = 'Error loading categories.';
+        }
+    }
+
+    function renderCategories(categories) {
+        categoriesTableBody.innerHTML = '';
+        categories.forEach(cat => {
+            const tr = document.createElement('tr');
+
+            const idTd = document.createElement('td');
+            idTd.textContent = cat.id;
+
+            const nameTd = document.createElement('td');
+            nameTd.textContent = cat.name;
+
+            tr.appendChild(idTd);
+            tr.appendChild(nameTd);
+            categoriesTableBody.appendChild(tr);
+        });
+    }
+
+    // ITEM LOCATIONS
+
+    async function loadLocations() {
+        try {
+            const res = await fetch(ITEM_LOCATIONS_API);
+            if (!res.ok) {
+                throw new Error('Failed to load locations, status ' + res.status);
+            }
+            const data = await res.json();
+            renderLocations(data);
+        } catch (e) {
+            console.error(e);
+            errorDiv.textContent = 'Error loading locations.';
+        }
+    }
+
+    function renderLocations(locations) {
+        locationsTableBody.innerHTML = '';
+        locations.forEach(loc => {
+            const tr = document.createElement('tr');
+
+            const idTd = document.createElement('td');
+            idTd.textContent = loc.id;
+
+            const nameTd = document.createElement('td');
+            nameTd.textContent = loc.name;
+
+            tr.appendChild(idTd);
+            tr.appendChild(nameTd);
+            locationsTableBody.appendChild(tr);
+        });
+    }
+
+    // FRIDGE ITEMS
+
+    async function loadItems() {
+        try {
+            const res = await fetch(ITEMS_API);
             if (!res.ok) {
                 throw new Error('Failed to load items, status ' + res.status);
             }
             const data = await res.json();
-            renderTable(data);
+            renderItems(data);
         } catch (e) {
             console.error(e);
             errorDiv.textContent = 'Error loading items.';
         }
     }
 
-    function renderTable(items) {
-        tableBody.innerHTML = '';
+    function renderItems(items) {
+        itemsTableBody.innerHTML = '';
         items.forEach(item => {
             const tr = document.createElement('tr');
 
@@ -130,9 +243,11 @@
             tr.appendChild(categoryTd);
             tr.appendChild(locationTd);
 
-            tableBody.appendChild(tr);
+            itemsTableBody.appendChild(tr);
         });
     }
+
+
 
     async function createItem(event) {
         event.preventDefault();
@@ -158,7 +273,7 @@
         };
 
         try {
-            const res = await fetch(API_BASE, {
+            const res = await fetch(ITEMS_API, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(body)
@@ -178,10 +293,17 @@
         }
     }
 
-    refreshBtn.addEventListener('click', loadItems);
+
+
+    refreshCategoriesBtn.addEventListener('click', loadCategories);
+    refreshLocationsBtn.addEventListener('click', loadLocations);
+    refreshItemsBtn.addEventListener('click', loadItems);
     form.addEventListener('submit', createItem);
 
 
+
+    loadCategories();
+    loadLocations();
     loadItems();
 </script>
 
