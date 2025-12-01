@@ -33,7 +33,6 @@
         </tr>
         </thead>
         <tbody>
-        <!-- categories go here -->
         </tbody>
     </table>
 </div>
@@ -134,6 +133,67 @@
         <button type="submit">Update</button>
     </form>
 
+    <h3>Create category</h3>
+    <form id="createCategoryForm">
+        <div class="row">
+            <div>
+                <label>Name:<br>
+                    <input type="text" id="categoryNameInput" required>
+                </label>
+            </div>
+        </div>
+        <button type="submit">Create category</button>
+    </form>
+    <h3>Update category</h3>
+    <p>Use Category ID from table above.</p>
+    <form id="updateCategoryForm">
+        <div class="row">
+            <div>
+                <label>Category ID:<br>
+                    <input type="text" id="updateCategoryId" required>
+                </label>
+            </div>
+            <div>
+                <label>New name:<br>
+                    <input type="text" id="updateCategoryName" required>
+                </label>
+            </div>
+        </div>
+        <button type="submit">Update category</button>
+    </form>
+    <h3>Create location</h3>
+    <form id="createLocationForm">
+        <div class="row">
+            <div>
+                <label>Name:<br>
+                    <input type="text" id="locationNameInput" required>
+                </label>
+            </div>
+        </div>
+        <button type="submit">Create location</button>
+    </form>
+    <h3>Update location</h3>
+    <p>Use Location ID from table above.</p>
+    <form id="updateLocationForm">
+        <div class="row">
+            <div>
+                <label>Location ID:<br>
+                    <input type="text" id="updateLocationId" required>
+                </label>
+            </div>
+            <div>
+                <label>New name:<br>
+                    <input type="text" id="updateLocationName" required>
+                </label>
+            </div>
+        </div>
+        <button type="submit">Update location</button>
+    </form>
+
+
+
+
+
 </div>
 
 <script>
@@ -154,6 +214,13 @@
     const messageDiv = document.getElementById('message');
     const errorDiv = document.getElementById('error');
     const updateForm = document.getElementById('updateForm');
+    const createCategoryForm = document.getElementById('createCategoryForm');
+    const updateCategoryForm = document.getElementById('updateCategoryForm');
+    const createLocationForm = document.getElementById('createLocationForm');
+    const updateLocationForm = document.getElementById('updateLocationForm');
+
+
+
 
 
     function clearMessages() {
@@ -193,6 +260,61 @@
             categoriesTableBody.appendChild(tr);
         });
     }
+    async function createCategory(event) {
+        event.preventDefault();
+        clearMessages();
+        const name = document.getElementById('categoryNameInput').value.trim();
+        if (!name) {
+            errorDiv.textContent = 'Category name is required.';
+            return;
+        }
+        try {
+            const res = await fetch(CATEGORIES_API, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name })
+            });
+            if (!res.ok) {
+                const text = await res.text();
+                throw new Error(text);
+            }
+            messageDiv.textContent = 'Category created.';
+            createCategoryForm.reset();
+            await loadCategories();
+        } catch (e) {
+            console.error(e);
+            errorDiv.textContent = 'Error creating category.';
+        }
+    }
+
+    async function updateCategory(event) {
+        event.preventDefault();
+        clearMessages();
+        const id = document.getElementById('updateCategoryId').value.trim();
+        const name = document.getElementById('updateCategoryName').value.trim();
+        if (!id || !name) {
+            errorDiv.textContent = 'Category ID and new name are required.';
+            return;
+        }
+        try {
+            const res = await fetch(`${CATEGORIES_API}/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name })
+            });
+            if (!res.ok) {
+                const text = await res.text();
+                throw new Error(text);
+            }
+            messageDiv.textContent = 'Category updated.';
+            updateCategoryForm.reset();
+            await loadCategories();
+        } catch (e) {
+            console.error(e);
+            errorDiv.textContent = 'Error updating category.';
+        }
+    }
+
 
     // ITEM LOCATIONS
 
@@ -226,6 +348,62 @@
             locationsTableBody.appendChild(tr);
         });
     }
+
+    async function createLocation(event) {
+        event.preventDefault();
+        clearMessages();
+        const name = document.getElementById('locationNameInput').value.trim();
+        if (!name) {
+            errorDiv.textContent = 'Location name is required.';
+            return;
+        }
+        try {
+            const res = await fetch(ITEM_LOCATIONS_API, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name })
+            });
+            if (!res.ok) {
+                const text = await res.text();
+                throw new Error(text);
+            }
+            messageDiv.textContent = 'Location created.';
+            createLocationForm.reset();
+            await loadLocations();
+        } catch (e) {
+            console.error(e);
+            errorDiv.textContent = 'Error creating location.';
+        }
+    }
+
+    async function updateLocation(event) {
+        event.preventDefault();
+        clearMessages();
+        const id = document.getElementById('updateLocationId').value.trim();
+        const name = document.getElementById('updateLocationName').value.trim();
+        if (!id || !name) {
+            errorDiv.textContent = 'Location ID and new name are required.';
+            return;
+        }
+        try {
+            const res = await fetch(`${ITEM_LOCATIONS_API}/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name })
+            });
+            if (!res.ok) {
+                const text = await res.text();
+                throw new Error(text);
+            }
+            messageDiv.textContent = 'Location updated.';
+            updateLocationForm.reset();
+            await loadLocations();
+        } catch (e) {
+            console.error(e);
+            errorDiv.textContent = 'Error updating location.';
+        }
+    }
+
 
     // FRIDGE ITEMS
 
@@ -404,6 +582,12 @@
     refreshItemsBtn.addEventListener('click', loadItems);
     form.addEventListener('submit', createItem);
     updateForm.addEventListener('submit', updateItem);
+    createCategoryForm.addEventListener('submit', createCategory);
+    updateCategoryForm.addEventListener('submit', updateCategory);
+    createLocationForm.addEventListener('submit', createLocation);
+    updateLocationForm.addEventListener('submit', updateLocation);
+
+
 
 
 
