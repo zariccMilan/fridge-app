@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Fridge Items</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        h1 { margin-bottom: 10px; }
+        table { border-collapse: collapse; width: 100%; margin-top: 10px; }
+        th, td { border: 1px solid #ccc; padding: 6px 10px; text-align: left; }
+        form { margin-top: 20px; display: flex; flex-wrap: wrap; gap: 10px; }
+        form input { padding: 4px 6px; }
+        .row { display: flex; gap: 10px; width: 100%; }
+        .row > div { flex: 1; }
+        #message { margin-top: 10px; color: green; }
+        #error { margin-top: 10px; color: red; }
+    </style>
+</head>
+<body>
+
+<h1>Fridge items</h1>
+
+<button id="refreshBtn">Refresh</button>
+
+<table id="itemsTable">
+    <thead>
+    <tr>
+        <th>Name</th>
+        <th>Quantity</th>
+        <th>Best before</th>
+        <th>Category</th>
+        <th>Location</th>
+    </tr>
+    </thead>
+    <tbody>
+
+    </tbody>
+</table>
+
+<h2>Add new item</h2>
+
+<form id="createForm">
+    <div class="row">
+        <div>
+            <label>Name:<br>
+                <input type="text" id="name" required>
+            </label>
+        </div>
+        <div>
+            <label>Quantity:<br>
+                <input type="number" id="quantity" min="0" required>
+            </label>
+        </div>
+        <div>
+            <label>Best before (date):<br>
+                <input type="date" id="bestBefore" required>
+            </label>
+        </div>
+    </div>
+    <div class="row">
+        <div>
+            <label>Category ID:<br>
+                <input type="text" id="categoryId" required>
+            </label>
+        </div>
+        <div>
+            <label>Location ID:<br>
+                <input type="text" id="locationId" required>
+            </label>
+        </div>
+    </div>
+    <button type="submit">Create</button>
+</form>
+
+<div id="message"></div>
+<div id="error"></div>
+
+<script>
+    const API_BASE = '/api/fridge/fridge-items';
+
+    const tableBody = document.querySelector('#itemsTable tbody');
+    const refreshBtn = document.getElementById('refreshBtn');
+    const form = document.getElementById('createForm');
+    const messageDiv = document.getElementById('message');
+    const errorDiv = document.getElementById('error');
+
+    function clearMessages() {
+        messageDiv.textContent = '';
+        errorDiv.textContent = '';
+    }
+
+    async function loadItems() {
+        clearMessages();
+        try {
+            const res = await fetch(API_BASE);
+            if (!res.ok) {
+                throw new Error('Failed to load items, status ' + res.status);
+            }
+            const data = await res.json();
+            renderTable(data);
+        } catch (e) {
+            console.error(e);
+            errorDiv.textContent = 'Error loading items.';
+        }
+    }
+
+    function renderTable(items) {
+        tableBody.innerHTML = '';
+        items.forEach(item => {
+            const tr = document.createElement('tr');
+
+            const nameTd = document.createElement('td');
+            nameTd.textContent = item.name;
+
+            const quantityTd = document.createElement('td');
+            quantityTd.textContent = item.quantity;
+
+            const bestBeforeTd = document.createElement('td');
+            bestBeforeTd.textContent = item.bestBefore;
+
+            const categoryTd = document.createElement('td');
+            categoryTd.textContent = item.categoryName || item.categoryId;
+
+            const locationTd = document.createElement('td');
+            locationTd.textContent = item.locationName || item.locationId;
+
+            tr.appendChild(nameTd);
+            tr.appendChild(quantityTd);
+            tr.appendChild(bestBeforeTd);
+            tr.appendChild(categoryTd);
+            tr.appendChild(locationTd);
+
+            tableBody.appendChild(tr);
+        });
+    }
+
+    async function createItem(event) {
+        event.preventDefault();
+        clearMessages();
+
+        const name = document.getElementById('name').value.trim();
+        const quantity = Number(document.getElementById('quantity').value);
+        const bestBefore = document.getElementById('bestBefore').value;
+        const categoryId = document.getElementById('categoryId').value.trim();
+        const locationId = document.getElementById('locationId').value.trim();
+
+        if (!name || !bestBefore || !categoryId || !locationId) {
+            errorDiv.textContent = 'All fields are required.';
+            return;
+        }
+
+        const body = {
+            name,
+            quantity,
+            bestBefore,
+            categoryId,
+            locationId
+        };
+
+        try {
+            const res = await fetch(API_BASE, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            });
+
+            if (!res.ok) {
+                const text = await res.text();
+                throw new Error('Failed to create item: ' + text);
+            }
+
+            messageDiv.textContent = 'Item created.';
+            form.reset();
+            await loadItems();
+        } catch (e) {
+            console.error(e);
+            errorDiv.textContent = 'Error creating item.';
+        }
+    }
+
+    refreshBtn.addEventListener('click', loadItems);
+    form.addEventListener('submit', createItem);
+
+
+    loadItems();
+</script>
+
+</body>
+</html>
