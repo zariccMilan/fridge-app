@@ -14,8 +14,12 @@
         form input { padding: 4px 6px; width: 100%; box-sizing: border-box; }
         .row { display: flex; gap: 10px; width: 100%; }
         .row > div { flex: 1; min-width: 150px; }
-        #message { margin-top: 10px; color: green; }
-        #error { margin-top: 10px; color: red; }
+        #fridgeMessage { margin-top: 10px; color: green; }
+        #fridgeError { margin-top: 10px; color: red; }
+        #categoryMessage { margin-top: 10px; color: green; }
+        #categoryError { margin-top: 10px; color: red; }
+        #itemLocationMessage { margin-top: 10px; color: green; }
+        #itemLocationError { margin-top: 10px; color: red; }
     </style>
 </head>
 <body>
@@ -108,8 +112,8 @@
         </div>
         <button type="submit">Create</button>
     </form>
-    <div id="message"></div>
-    <div id="error"></div>
+    <div id="fridgeMessage"></div>
+    <div id="fridgeError"></div>
     <h3>Update fridge item (quantity / bestBefore)</h3>
     <p>Enter existing item ID from table and new values (leave empty to skip field).</p>
     <form id="updateForm">
@@ -144,6 +148,8 @@
         </div>
         <button type="submit">Create category</button>
     </form>
+    <div id="categoryMessage"></div>
+    <div id="categoryError"></div>
     <h3>Update category</h3>
     <p>Use Category ID from table above.</p>
     <form id="updateCategoryForm">
@@ -172,6 +178,8 @@
         </div>
         <button type="submit">Create location</button>
     </form>
+    <div id="itemLocationMessage"></div>
+    <div id="itemLocationError"></div>
     <h3>Update location</h3>
     <p>Use Location ID from table above.</p>
     <form id="updateLocationForm">
@@ -211,8 +219,19 @@
     const refreshItemsBtn = document.getElementById('refreshItemsBtn');
 
     const form = document.getElementById('createForm');
-    const messageDiv = document.getElementById('message');
-    const errorDiv = document.getElementById('error');
+
+    // const messageDiv = document.getElementById('message');
+    // const errorDiv = document.getElementById('error');
+
+    const fridgeMessage = document.getElementById('fridgeMessage');
+    const fridgeError = document.getElementById('fridgeError');
+
+    const categoryMessage = document.getElementById('categoryMessage');
+    const categoryError = document.getElementById('categoryError');
+
+    const itemLocationMessage = document.getElementById('itemLocationMessage');
+    const itemLocationError = document.getElementById('itemLocationError');
+
     const updateForm = document.getElementById('updateForm');
     const createCategoryForm = document.getElementById('createCategoryForm');
     const updateCategoryForm = document.getElementById('updateCategoryForm');
@@ -224,8 +243,12 @@
 
 
     function clearMessages() {
-        messageDiv.textContent = '';
-        errorDiv.textContent = '';
+        fridgeMessage.textContent = '';
+        fridgeError.textContent = '';
+        categoryMessage.textContent = '';
+        categoryError.textContent = '';
+        itemLocationMessage.textContent = '';
+        itemLocationError.textContent = '';
     }
 
     // CATEGORIES
@@ -240,7 +263,7 @@
             renderCategories(data);
         } catch (e) {
             console.error(e);
-            errorDiv.textContent = 'Error loading categories.';
+            categoryError.textContent = 'Error loading categories.';
         }
     }
 
@@ -265,7 +288,7 @@
         clearMessages();
         const name = document.getElementById('categoryNameInput').value.trim();
         if (!name) {
-            errorDiv.textContent = 'Category name is required.';
+            categoryError.textContent = 'Category name is required.';
             return;
         }
         try {
@@ -278,12 +301,12 @@
                 const text = await res.text();
                 throw new Error(text);
             }
-            messageDiv.textContent = 'Category created.';
+            categoryMessage.textContent = 'Category created.';
             createCategoryForm.reset();
             await loadCategories();
         } catch (e) {
             console.error(e);
-            errorDiv.textContent = 'Error creating category.';
+            categoryError.textContent = 'Error creating category.';
         }
     }
 
@@ -293,7 +316,7 @@
         const id = document.getElementById('updateCategoryId').value.trim();
         const name = document.getElementById('updateCategoryName').value.trim();
         if (!id || !name) {
-            errorDiv.textContent = 'Category ID and new name are required.';
+            categoryError.textContent = 'Category ID and new name are required.';
             return;
         }
         try {
@@ -306,12 +329,12 @@
                 const text = await res.text();
                 throw new Error(text);
             }
-            messageDiv.textContent = 'Category updated.';
+            categoryMessage.textContent = 'Category updated.';
             updateCategoryForm.reset();
             await loadCategories();
         } catch (e) {
             console.error(e);
-            errorDiv.textContent = 'Error updating category.';
+            categoryError.textContent = 'Error updating category.';
         }
     }
 
@@ -328,7 +351,7 @@
             renderLocations(data);
         } catch (e) {
             console.error(e);
-            errorDiv.textContent = 'Error loading locations.';
+            itemLocationError.textContent = 'Error loading locations.';
         }
     }
 
@@ -354,7 +377,7 @@
         clearMessages();
         const name = document.getElementById('locationNameInput').value.trim();
         if (!name) {
-            errorDiv.textContent = 'Location name is required.';
+            itemLocationError.textContent = 'Location name is required.';
             return;
         }
         try {
@@ -367,12 +390,12 @@
                 const text = await res.text();
                 throw new Error(text);
             }
-            messageDiv.textContent = 'Location created.';
+            itemLocationMessage.textContent = 'Location created.';
             createLocationForm.reset();
             await loadLocations();
         } catch (e) {
             console.error(e);
-            errorDiv.textContent = 'Error creating location.';
+            itemLocationError.textContent = 'Error creating location.';
         }
     }
 
@@ -382,7 +405,7 @@
         const id = document.getElementById('updateLocationId').value.trim();
         const name = document.getElementById('updateLocationName').value.trim();
         if (!id || !name) {
-            errorDiv.textContent = 'Location ID and new name are required.';
+            itemLocationError.textContent = 'Location ID and new name are required.';
             return;
         }
         try {
@@ -395,12 +418,12 @@
                 const text = await res.text();
                 throw new Error(text);
             }
-            messageDiv.textContent = 'Location updated.';
+            itemLocationMessage.textContent = 'Location updated.';
             updateLocationForm.reset();
             await loadLocations();
         } catch (e) {
             console.error(e);
-            errorDiv.textContent = 'Error updating location.';
+            itemLocationError.textContent = 'Error updating location.';
         }
     }
 
@@ -417,7 +440,7 @@
             renderItems(data);
         } catch (e) {
             console.error(e);
-            errorDiv.textContent = 'Error loading items.';
+            fridgeError.textContent = 'Error loading items.';
         }
     }
 
@@ -470,7 +493,7 @@
         const bestBefore = document.getElementById('updateBestBefore').value;
 
         if (!id) {
-            errorDiv.textContent = 'Item ID is required.';
+            fridgeError.textContent = 'Item ID is required.';
             return;
         }
 
@@ -483,7 +506,7 @@
         }
 
         if (Object.keys(body).length === 0) {
-            errorDiv.textContent = 'Nothing to update.';
+            fridgeError.textContent = 'Nothing to update.';
             return;
         }
 
@@ -499,12 +522,12 @@
                 throw new Error('Failed to update item: ' + text);
             }
 
-            messageDiv.textContent = 'Item updated.';
+            fridgeMessage.textContent = 'Item updated.';
             updateForm.reset();
             await loadItems();
         } catch (e) {
             console.error(e);
-            errorDiv.textContent = 'Error updating item.';
+            fridgeError.textContent = 'Error updating item.';
         }
     }
 
@@ -521,7 +544,7 @@
         const locationId = document.getElementById('locationId').value.trim();
 
         if (!name || !bestBefore || !categoryId || !locationId) {
-            errorDiv.textContent = 'All fields are required.';
+            fridgeError.textContent = 'All fields are required.';
             return;
         }
 
@@ -545,12 +568,12 @@
                 throw new Error('Failed to create item: ' + text);
             }
 
-            messageDiv.textContent = 'Item created.';
+            fridgeMessage.textContent = 'Item created.';
             form.reset();
             await loadItems();
         } catch (e) {
             console.error(e);
-            errorDiv.textContent = 'Error creating item.';
+            fridgeError.textContent = 'Error creating item.';
         }
     }
 
@@ -566,11 +589,11 @@
             if (!res.ok && res.status !== 204) {
                 throw new Error('Failed to delete, status ' + res.status);
             }
-            messageDiv.textContent = 'Item deleted.';
+            fridgeMessage.textContent = 'Item deleted.';
             await loadItems();
         } catch (e) {
             console.error(e);
-            errorDiv.textContent = 'Error deleting item.';
+            fridgeError.textContent = 'Error deleting item.';
         }
     }
 
