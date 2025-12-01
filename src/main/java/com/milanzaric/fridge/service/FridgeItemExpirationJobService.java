@@ -29,7 +29,5 @@ public class FridgeItemExpirationJobService {
             expiringItems.forEach(item ->
                     System.out.println(" - " + item.getName() + " (bestBefore=" + item.getBestBefore() + ")"));
         }
-
-
     }
 }
