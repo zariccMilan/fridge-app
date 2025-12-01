@@ -28,8 +28,8 @@ public class FridgeItemCreateDTO {
     @Min(0)
     private Integer quantity;
 
-    @NotNull
-    private LocalDateTime storedAt;
+//    @NotNull
+//    private LocalDateTime storedAt;
 
     @NotNull
     private LocalDate bestBefore;
