@@ -135,6 +135,14 @@ All frontend actions use `fetch` to call the REST endpoints.
 - `docker-compose.yml`
   - defines the PostgreSQL service used by the application
 
+## Postman collection
+
+A Postman collection is available in `postman/fridge.postman_collection.json`.
+
+You can import it into Postman and run requests against:
+- the local backend (`http://localhost:8080`)
+- the Docker-based PostgreSQL setup described above.
+
 
 
 
