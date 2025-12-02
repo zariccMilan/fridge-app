@@ -12,7 +12,8 @@ A simple Spring Boot 4 application for managing fridge items, categories, and lo
 
 - Java 21  
 - Spring Boot 4 (Web, Data JPA, Validation, Scheduling)  
-- PostgreSQL (via Docker Compose)  
+- PostgreSQL (via Docker Compose)
+- Redis (caching via Spring Cache + Spring Data Redis)
 - JUnit 5, Mockito (`@WebMvcTest` + `@MockitoBean`)  
 - HTML, CSS, vanilla JavaScript (`fetch`)  
 
@@ -29,14 +30,16 @@ A simple Spring Boot 4 application for managing fridge items, categories, and lo
 - cd fridge-app
 
   
-### 2. Start PostgreSQL with Docker Compose
+### 2. Start PostgreSQL and Redis with Docker Compose
 - docker compose up -d
   
-This starts a `postgres:16` container with:
+This starts a `postgres:17` container with:
 
 - database: `fridge_db`  
 - user: `fridge_user`  
-- password: `fridge_pass`  
+- password: `fridge_pass`
+  
+- Redis (used as cache provider)
 
 On first start it automatically executes `db/init.sql`, which:
 
@@ -95,6 +98,10 @@ All frontend actions use `fetch` to call the REST endpoints.
 - `@Scheduled` job periodically finds items that are close to their expiry date
 - In this version it logs the result, but it can easily be extended to write notifications or send emails
 
+### Caching:
+
+  - Redis-backed cache for frequently used read endpoints (categories, locations, fridge items) with proper cache eviction on writes.
+
 ### Testing
 
 - Web MVC tests for `FridgeItemController` using:
@@ -142,6 +149,37 @@ A Postman collection is available in `postman/fridge.postman_collection.json`.
 You can import it into Postman and run requests against:
 - the local backend (`http://localhost:8080`)
 - the Docker-based PostgreSQL setup described above.
+
+  
+## Caching with Redis
+
+ The application uses Redis as a cache provider via Spring's annotation-based caching.
+
+- Redis is started via `docker-compose.yml` (service `redis` on port `6379`).
+- Caching is enabled with `@EnableCaching` and a `RedisCacheManager` configuration (`RedisCacheConfig`).
+
+Currently cached operations:
+
+- `CategoryService.getAllCategories()`  
+  - Annotated with `@Cacheable("categories")`.
+  - First call loads data from the database and stores the result in Redis.
+  - Subsequent calls return the cached value.
+
+- `ItemLocationService.getAllItemLocations()`
+  - Annotated with `@Cacheable("locations")`.
+
+- `FridgeItemService.getAllFridgeItems()`  
+  - Annotated with `@Cacheable("fridgeItems")`.
+
+Cache eviction:
+
+- Whenever categories, locations or fridge items are modified, the relevant caches are cleared using `@CacheEvict`:
+  - `@CacheEvict(value = "categories", allEntries = true)` on create/update category.
+  - `@CacheEvict(value = "locations", allEntries = true)` on create/update location.
+  - `@CacheEvict(value = "fridgeItems", allEntries = true)` on create/update/soft delete fridge items.
+
+This ensures that the cached lists are always in sync with the database after write operations.
+
 
 
 
