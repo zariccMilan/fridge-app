@@ -14,6 +14,8 @@ import com.milanzaric.fridge.repository.ItemLocationRepository;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -30,8 +32,10 @@ public class FridgeItemService {
 
 
     // GET ALL method, listing all Fridge items
+    @Cacheable("fridgeItems")
     public List<FridgeItemDTO> getAllFridgeItems() {
         List<FridgeItem> fridgeItems = fridgeItemRepository.findAllByIsDeletedFalse();
+        System.out.println("Loading from DB");
         return FridgeItemMapper.MAPPER.mapToListFridgeItemDTO(fridgeItems);
     }
 
@@ -43,6 +47,7 @@ public class FridgeItemService {
 
     // CREATE method, creating new Fridge item
     // Added Transactional, all actions or rollback
+    @CacheEvict(value = "fridgeItems", allEntries = true)
     @Transactional
     public FridgeItemDTO createFridgeItem(FridgeItemCreateDTO fridgeItemCreateDTO) {
         Category category = categoryRepository.findById(fridgeItemCreateDTO.getCategoryId())
@@ -65,6 +70,7 @@ public class FridgeItemService {
     }
 
     // UPDATE method, updating existing Fridge items
+    @CacheEvict(value = "fridgeItems", allEntries = true)
     @Transactional
     public FridgeItemDTO updateFridgeItem(FridgeItemUpdateDTO fridgeItemUpdateDTO, UUID id) {
         FridgeItem fridgeItem = findFridgeItemById(id);
@@ -97,6 +103,7 @@ public class FridgeItemService {
     }
 
     // SOFT DELETE method, deleting existing Fridge item
+    @CacheEvict(value = "fridgeItems", allEntries = true)
     @Transactional
     public void softDeleteFridgeItem(UUID id) {
         FridgeItem fridgeItem = findFridgeItemById(id);
