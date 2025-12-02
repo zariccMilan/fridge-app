@@ -10,6 +10,8 @@ import com.milanzaric.fridge.repository.ItemLocationRepository;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -22,8 +24,10 @@ public class ItemLocationService {
     private final ItemLocationRepository itemLocationRepository;
 
     // GET ALL method, listing all Item locations
+    @Cacheable("itemLocations")
     public List<ItemLocationDTO> getAllItemLocations() {
         List<ItemLocation> itemLocations = itemLocationRepository.findAll();
+        System.out.println("Loading from DB");
         return ItemLocationMapper.MAPPER.mapToListItemLocationDTO(itemLocations);
     }
 
@@ -35,6 +39,7 @@ public class ItemLocationService {
 
     // CREATE method, creating new Item location
     // Added Transactional, all actions or rollback
+    @CacheEvict(value = "itemLocations", allEntries = true)
     @Transactional
     public ItemLocationDTO createItemLocation(ItemLocationCreateDTO itemLocationCreateDTO) {
         ItemLocation itemLocation = ItemLocation.builder()
@@ -45,6 +50,7 @@ public class ItemLocationService {
     }
 
     // UPDATE method, updating existing Item location
+    @CacheEvict(value = "itemLocations", allEntries = true)
     @Transactional
     public ItemLocationDTO updateItemLocation(ItemLocationUpdateDTO itemLocationUpdateDTO, UUID id) {
         ItemLocation itemLocation = findItemLocationById(id);

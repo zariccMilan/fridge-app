@@ -9,6 +9,8 @@ import com.milanzaric.fridge.repository.CategoryRepository;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -21,8 +23,10 @@ public class CategoryService {
     private final CategoryRepository categoryRepository;
 
     // GET ALL method, listing all Categories
+    @Cacheable("categories")
     public List<CategoryDTO> getAllCategories() {
         List<Category> category = categoryRepository.findAll();
+        System.out.println("Loading from DB");
         return CategoryMapper.MAPPER.mapToListCategoryDTO(category);
     }
 
@@ -34,6 +38,7 @@ public class CategoryService {
 
     // CREATE method, creating new Category
     // Added Transactional, all actions or rollback
+    @CacheEvict(value = "categories", allEntries = true)
     @Transactional
     public CategoryDTO createCategory(CategoryCreateDTO categoryCreateDTO) {
         Category category = Category.builder()
@@ -44,6 +49,7 @@ public class CategoryService {
     }
 
     // UPDATE method, updating existing Category
+    @CacheEvict(value = "categories", allEntries = true)
     @Transactional
     public CategoryDTO updateCategory(CategoryUpdateDTO categoryUpdateDTO, UUID id) {
         Category category = findCategoryById(id);
